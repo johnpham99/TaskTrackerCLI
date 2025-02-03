@@ -1,0 +1,29 @@
+# Build directories
+bin/
+obj/
+
+# Visual Studio files
+.vscode/
+.vs/
+
+# User-specific settings
+*.user
+*.suo
+
+# Logs and temp files
+*.log
+*.tmp
+
+# NuGet-related generated files
+project.assets.json
+project.nuget.cache
+*.nuget.dgspec.json
+
+# Dependency folders
+packages/
+node_modules/
+
+# Environment variables & secrets
+appsettings.json
+.env
+secrets.json
