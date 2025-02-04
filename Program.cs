@@ -1,6 +1,7 @@
-﻿class Program
+﻿using System.Text.Json;
+class Program
 {
-    private static readonly string[] VALID_ACTIONS = { "help", "exit" };
+    private static readonly string[] VALID_ACTIONS = { "help", "exit", "list" };
 
     private static readonly Dictionary<string, string> HELP_COMMANDS = new()
 {
@@ -15,8 +16,12 @@
     { "exit", "Close the application"}
 };
 
+    private static List<ToDoTask> tasks = new List<ToDoTask>();
+
     static void Main(string[] args)
     {
+        tasks = ReadTasksFile();
+
         Console.WriteLine(" --- Task Tracker Launched! --- ");
         Console.WriteLine("'help' - print available commands");
 
@@ -25,6 +30,22 @@
             string? command = ReadCommand();
             RunCommand(command);
         }
+    }
+    private static List<ToDoTask> ReadTasksFile()
+    {
+        List<ToDoTask> tasks = new List<ToDoTask>();
+
+        string filePath = "tasks.json";
+        if (File.Exists(filePath))
+        {
+            string jsonString = File.ReadAllText(filePath);
+            if (!string.IsNullOrWhiteSpace(jsonString))
+            {
+                tasks = JsonSerializer.Deserialize<List<ToDoTask>>(jsonString) ?? new List<ToDoTask>();
+            }
+        }
+
+        return tasks;
     }
 
     private static void RunCommand(string? command)
@@ -41,14 +62,39 @@
         {
             case "help":
                 RunHelpCommand();
-                break;
+                return;
+            case "list":
+                RunListCommand();
+                return;
             case "exit":
                 ExitApplication();
+                return;
+        }
+
+        string[] parts = command.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+        string action = parts[0];
+
+        switch (action)
+        {
+            case "add":
                 break;
             default:
                 Console.WriteLine($"ERROR: Unknown command '{command}'.");
-                break;
+                return;
         }
+    }
+
+    private static void RunListCommand(string option = "")
+    {
+        Console.WriteLine("\n===== To Do List =====");
+        if (option == "")
+        {
+            foreach (ToDoTask task in tasks)
+            {
+                Console.WriteLine(task);
+            }
+        }
+        Console.WriteLine("==============================\n");
     }
 
     private static void ExitApplication()
