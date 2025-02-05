@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+using System.Text.Json;
+using MyProject.Models;
+using MyProject.Services;
 class Program
 {
     private static readonly string[] VALID_ACTIONS = { "help", "exit", "list" };
@@ -16,12 +18,10 @@ class Program
     { "exit", "Close the application"}
 };
 
-    private static List<ToDoTask> tasks = new List<ToDoTask>();
+    private static List<ToDoTask> tasks = TaskService.LoadTasks();
 
     static void Main(string[] args)
     {
-        tasks = ReadTasksFile();
-
         Console.WriteLine(" --- Task Tracker Launched! --- ");
         Console.WriteLine("'help' - print available commands");
 
@@ -30,22 +30,6 @@ class Program
             string? command = ReadCommand();
             RunCommand(command);
         }
-    }
-    private static List<ToDoTask> ReadTasksFile()
-    {
-        List<ToDoTask> tasks = new List<ToDoTask>();
-
-        string filePath = "tasks.json";
-        if (File.Exists(filePath))
-        {
-            string jsonString = File.ReadAllText(filePath);
-            if (!string.IsNullOrWhiteSpace(jsonString))
-            {
-                tasks = JsonSerializer.Deserialize<List<ToDoTask>>(jsonString) ?? new List<ToDoTask>();
-            }
-        }
-
-        return tasks;
     }
 
     private static void RunCommand(string? command)
@@ -86,6 +70,7 @@ class Program
 
     private static void RunListCommand(string option = "")
     {
+        ReadTasksFile();
         Console.WriteLine("\n===== To Do List =====");
         if (option == "")
         {
@@ -96,14 +81,6 @@ class Program
         }
         Console.WriteLine("==============================\n");
     }
-
-    private static void ExitApplication()
-    {
-        Console.WriteLine("Exiting Task Tracker... Goodbye!");
-        Environment.Exit(0);
-    }
-
-
     private static void RunHelpCommand()
     {
         Console.WriteLine("\n===== Available Commands =====");
@@ -114,33 +91,40 @@ class Program
         Console.WriteLine("==============================\n");
     }
 
-    private static string? ReadCommand()
+    private static void ExitApplication()
     {
-        bool validCommand = false;
-        string? command = "";
+        Console.WriteLine("Exiting Task Tracker... Goodbye!");
+        Environment.Exit(0);
+    }
 
-        while (!validCommand)
+    private static string? ReadCommand()
         {
-            command = Console.ReadLine();
-            validCommand = IsValid(command);
-
-            if (!validCommand)
+        while (true)
             {
+            string? command = Console.ReadLine();
+            if (IsValid(command))
+            {
+                return command;
+            }
                 Console.WriteLine($"'{command}' is not a valid command");
             }
         }
 
-        return command;
-    }
-
     private static bool IsValid(string? command)
     {
-        if (string.IsNullOrWhiteSpace(command))
-        {
-            return false;
-        }
+        return !string.IsNullOrWhiteSpace(command) &&
+            VALID_ACTIONS.Contains(command.Split(" ")[0], StringComparer.OrdinalIgnoreCase);
+    }
 
-        string[] parts = command.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-        return VALID_ACTIONS.Contains(parts[0], StringComparer.OrdinalIgnoreCase);
+    private static void ReadTasksFile()
+    {
+        if (File.Exists(filePath))
+        {
+            string jsonString = File.ReadAllText(filePath);
+            if (!string.IsNullOrWhiteSpace(jsonString))
+            {
+                tasks = JsonSerializer.Deserialize<List<ToDoTask>>(jsonString) ?? new List<ToDoTask>();
+        }
+        }
     }
 }

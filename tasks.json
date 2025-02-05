@@ -1,17 +1,1 @@
-[
-    {
-        "Id": 1,
-        "Description": "Work on basic list command",
-        "State": "Done"
-    },
-    {
-        "Id": 2,
-        "Description": "Work on add command",
-        "State": "InProgress"
-    },
-    {
-        "Id": 3,
-        "Description": "Work on marking task state",
-        "State": "Todo"
-    }
-]
+[]

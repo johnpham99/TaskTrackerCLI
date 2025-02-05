@@ -1,22 +1,25 @@
 using System.Text.Json.Serialization;
 
-class ToDoTask
+namespace MyProject.Models
 {
-    public int Id { get; set; }
-    public String? Description { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public State State { get; set; }
-
-    public override string ToString()
+    public class ToDoTask
     {
-        return $"{Id}. {Description} ({State})";
-    }
-}
+        public int Id { get; set; }
+        public string? Description { get; set; }
 
-enum State
-{
-    Todo,
-    InProgress,
-    Done
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public State State { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Id}. {Description} ({State})";
+        }
+    }
+
+    public enum State
+    {
+        Todo,
+        InProgress,
+        Done
+    }
 }
