@@ -1,9 +1,9 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using MyProject.Models;
 using MyProject.Services;
 class Program
 {
-    private static readonly string[] VALID_ACTIONS = { "help", "exit", "list" };
+    private static readonly string[] VALID_ACTIONS = { "help", "exit", "list", "add" };
 
     private static readonly Dictionary<string, string> HELP_COMMANDS = new()
 {
@@ -40,7 +40,9 @@ class Program
             return;
         }
 
-        command = command.ToLowerInvariant();
+        string[] parts = command.ToLowerInvariant().Split(" ", StringSplitOptions.RemoveEmptyEntries);
+        string action = parts[0];
+        string[] arguments = parts.Skip(1).ToArray();
 
         switch (command)
         {
@@ -55,17 +57,38 @@ class Program
                 return;
         }
 
-        string[] parts = command.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-        string action = parts[0];
-
         switch (action)
         {
             case "add":
+                RunAddCommand(arguments);
                 break;
             default:
                 Console.WriteLine($"ERROR: Unknown command '{command}'.");
                 return;
         }
+    }
+
+    private static void RunAddCommand(string[] descriptionParts)
+    {
+        if (descriptionParts.Length == 0)
+        {
+            Console.WriteLine("ERROR: Task description cannot be empty.");
+            return;
+        }
+
+        int id = tasks.Count() == 0 ? 1 : tasks[tasks.Count() - 1].Id + 1;
+
+        ToDoTask task = new ToDoTask
+        {
+            Id = id,
+            Description = string.Join(" ", descriptionParts),
+            State = State.Todo
+        };
+
+        tasks.Add(task);
+        TaskService.SaveTasks(tasks);
+
+        Console.WriteLine("Task added successfully!");
     }
 
     private static void RunListCommand(string option = "")
@@ -98,17 +121,17 @@ class Program
     }
 
     private static string? ReadCommand()
-        {
+    {
         while (true)
-            {
+        {
             string? command = Console.ReadLine();
             if (IsValid(command))
             {
                 return command;
             }
-                Console.WriteLine($"'{command}' is not a valid command");
-            }
+            Console.WriteLine($"'{command}' is not a valid command");
         }
+    }
 
     private static bool IsValid(string? command)
     {
@@ -124,7 +147,7 @@ class Program
             if (!string.IsNullOrWhiteSpace(jsonString))
             {
                 tasks = JsonSerializer.Deserialize<List<ToDoTask>>(jsonString) ?? new List<ToDoTask>();
-        }
+            }
         }
     }
 }
