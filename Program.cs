@@ -3,7 +3,7 @@ using MyProject.Models;
 using MyProject.Services;
 class Program
 {
-    private static readonly string[] VALID_ACTIONS = { "help", "exit", "list", "add" };
+    private static readonly string[] VALID_ACTIONS = { "help", "exit", "list", "add", "delete" };
 
     private static readonly Dictionary<string, string> HELP_COMMANDS = new()
 {
@@ -13,8 +13,8 @@ class Program
     { "list todo", "Show pending tasks" },
     { "list in-progress", "Show tasks in progress" },
     { "add [task]", "Add a new task" },
-    { "remove [task]", "Remove a task" },
-    { "complete [task]", "Mark a task as done" },
+    { "delete [task id]", "Remove a task" },
+    { "complete [task id]", "Mark a task as done" },
     { "exit", "Close the application"}
 };
 
@@ -62,17 +62,48 @@ class Program
             case "add":
                 RunAddCommand(arguments);
                 break;
+            case "delete":
+                RunDeleteCommand(arguments);
+                break;
             default:
                 Console.WriteLine($"ERROR: Unknown command '{command}'.");
                 return;
         }
     }
 
-    private static void RunAddCommand(string[] descriptionParts)
+    private static void RunDeleteCommand(string[] arguments)
     {
-        if (descriptionParts.Length == 0)
+        if (arguments.Length == 0 || arguments.Length > 1 || !int.TryParse(arguments[0], out int result))
         {
-            Console.WriteLine("ERROR: Task description cannot be empty.");
+            Console.WriteLine("ERROR: Delete Command needs to be in the form: delete <task-id>\n");
+            return;
+        }
+
+        tasks = TaskService.LoadTasks();
+
+        if (result > tasks.Count || result <= 0)
+        {
+            Console.WriteLine($"ERROR: No task with id {result}.\n");
+            return;
+        }
+
+        tasks.RemoveAt(result - 1);
+
+        for (int i = 0; i < tasks.Count; i++)
+        {
+            tasks[i].Id = i + 1; // Reset IDs from 1, 2, ..., n
+        }
+
+        TaskService.SaveTasks(tasks);
+
+        Console.WriteLine("Task deleted successfully!\n");
+        RunListCommand();
+    }
+    private static void RunAddCommand(string[] arguments)
+    {
+        if (arguments.Length == 0)
+        {
+            Console.WriteLine("ERROR: Task description cannot be empty.\n");
             return;
         }
 
@@ -81,19 +112,20 @@ class Program
         ToDoTask task = new ToDoTask
         {
             Id = id,
-            Description = string.Join(" ", descriptionParts),
+            Description = string.Join(" ", arguments),
             State = State.Todo
         };
 
+        tasks = TaskService.LoadTasks();
         tasks.Add(task);
         TaskService.SaveTasks(tasks);
 
-        Console.WriteLine("Task added successfully!");
+        Console.WriteLine("Task added successfully!\n");
     }
 
     private static void RunListCommand(string option = "")
     {
-        ReadTasksFile();
+        tasks = TaskService.LoadTasks();
         Console.WriteLine("\n===== To Do List =====");
         if (option == "")
         {
@@ -129,7 +161,7 @@ class Program
             {
                 return command;
             }
-            Console.WriteLine($"'{command}' is not a valid command");
+            Console.WriteLine($"'{command}' is not a valid command\n");
         }
     }
 
@@ -137,17 +169,5 @@ class Program
     {
         return !string.IsNullOrWhiteSpace(command) &&
             VALID_ACTIONS.Contains(command.Split(" ")[0], StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static void ReadTasksFile()
-    {
-        if (File.Exists(filePath))
-        {
-            string jsonString = File.ReadAllText(filePath);
-            if (!string.IsNullOrWhiteSpace(jsonString))
-            {
-                tasks = JsonSerializer.Deserialize<List<ToDoTask>>(jsonString) ?? new List<ToDoTask>();
-            }
-        }
     }
 }
