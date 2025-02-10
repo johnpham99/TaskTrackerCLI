@@ -3,7 +3,7 @@ using MyProject.Models;
 using MyProject.Services;
 class Program
 {
-    private static readonly string[] VALID_ACTIONS = { "help", "exit", "list", "add", "delete" };
+    private static readonly string[] VALID_ACTIONS = { "help", "exit", "list", "add", "delete", "mark-in-progress", "mark-done" };
 
     private static readonly Dictionary<string, string> HELP_COMMANDS = new()
 {
@@ -14,7 +14,8 @@ class Program
     { "list in-progress", "Show tasks in progress" },
     { "add [task]", "Add a new task" },
     { "delete [task id]", "Remove a task" },
-    { "complete [task id]", "Mark a task as done" },
+    { "mark-in-progress [task id]", "Mark a task as in progress" },
+    { "mark-done [task id]", "Mark a task as done" },
     { "exit", "Close the application"}
 };
 
@@ -65,10 +66,45 @@ class Program
             case "delete":
                 RunDeleteCommand(arguments);
                 break;
+            case "mark-in-progress":
+                RunMarkCommand(arguments, State.InProgress);
+                break;
+            case "mark-done":
+                RunMarkCommand(arguments, State.Done);
+                break;
             default:
                 Console.WriteLine($"ERROR: Unknown command '{command}'.");
                 return;
         }
+    }
+
+    private static void RunMarkCommand(string[] arguments, State state)
+    {
+        if (arguments.Length == 0 || arguments.Length > 1 || !int.TryParse(arguments[0], out int result))
+        {
+            if (state == State.InProgress)
+            {
+                Console.WriteLine("ERROR: Mark Command needs to be in the form: mark-in-progress <task-id>\n");
+            }
+            else
+            {
+                Console.WriteLine("ERROR: Mark Command needs to be in the form: mark-done <task-id>\n");
+            }
+            return;
+        }
+
+        tasks = TaskService.LoadTasks();
+
+        if (result > tasks.Count || result <= 0)
+        {
+            Console.WriteLine($"ERROR: No task with id {result}.\n");
+            return;
+        }
+
+        tasks[result - 1].State = state;
+        TaskService.SaveTasks(tasks);
+        Console.WriteLine($"Task {result} marked successfully!\n");
+        RunListCommand();
     }
 
     private static void RunDeleteCommand(string[] arguments)
@@ -121,6 +157,7 @@ class Program
         TaskService.SaveTasks(tasks);
 
         Console.WriteLine("Task added successfully!\n");
+        RunListCommand();
     }
 
     private static void RunListCommand(string option = "")
