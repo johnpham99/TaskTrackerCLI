@@ -50,9 +50,6 @@ class Program
             case "help":
                 RunHelpCommand();
                 return;
-            case "list":
-                RunListCommand();
-                return;
             case "exit":
                 ExitApplication();
                 return;
@@ -72,10 +69,30 @@ class Program
             case "mark-done":
                 RunMarkCommand(arguments, State.Done);
                 break;
+            case "list":
+                RunListCommand(arguments);
+                return;
             default:
                 Console.WriteLine($"ERROR: Unknown command '{command}'.");
                 return;
         }
+    }
+
+    private static void RunListCommand(string[] arguments)
+    {
+        if (arguments.Length == 0)
+        {
+            PrintTodoList();
+            return;
+        }
+
+        if (arguments.Length > 1 || (arguments[0] != "done" && arguments[0] != "todo" && arguments[0] != "in-progress"))
+        {
+            Console.WriteLine("ERROR: List Command needs to be in the form: list or list <done/todo/in-progress>\n");
+            return;
+        }
+
+        PrintTodoList(arguments[0]);
     }
 
     private static void RunMarkCommand(string[] arguments, State state)
@@ -104,7 +121,7 @@ class Program
         tasks[result - 1].State = state;
         TaskService.SaveTasks(tasks);
         Console.WriteLine($"Task {result} marked successfully!\n");
-        RunListCommand();
+        PrintTodoList();
     }
 
     private static void RunDeleteCommand(string[] arguments)
@@ -133,7 +150,7 @@ class Program
         TaskService.SaveTasks(tasks);
 
         Console.WriteLine("Task deleted successfully!\n");
-        RunListCommand();
+        PrintTodoList();
     }
     private static void RunAddCommand(string[] arguments)
     {
@@ -157,16 +174,43 @@ class Program
         TaskService.SaveTasks(tasks);
 
         Console.WriteLine("Task added successfully!\n");
-        RunListCommand();
+        PrintTodoList();
     }
 
-    private static void RunListCommand(string option = "")
+    private static void PrintTodoList(string option = "")
     {
         tasks = TaskService.LoadTasks();
-        Console.WriteLine("\n===== To Do List =====");
+
+        IEnumerable<ToDoTask> filteredTasks = tasks;
+
         if (option == "")
         {
-            foreach (ToDoTask task in tasks)
+            Console.WriteLine("\n===== To Do List =====");
+        }
+
+        if (option == "done")
+        {
+            filteredTasks = tasks.Where(t => t.State == State.Done);
+            Console.WriteLine("\n===== To Do List (Done) =====");
+        }
+        else if (option == "todo")
+        {
+            filteredTasks = tasks.Where(t => t.State == State.Todo);
+            Console.WriteLine("\n===== To Do List (To Do) =====");
+        }
+        else if (option == "in-progress")
+        {
+            filteredTasks = tasks.Where(t => t.State == State.InProgress);
+            Console.WriteLine("\n===== To Do List (In Progress) =====");
+        }
+
+        if (!filteredTasks.Any())
+        {
+            Console.WriteLine("No tasks found.");
+        }
+        else
+        {
+            foreach (ToDoTask task in filteredTasks)
             {
                 Console.WriteLine(task);
             }
