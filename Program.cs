@@ -3,7 +3,7 @@ using MyProject.Models;
 using MyProject.Services;
 class Program
 {
-    private static readonly string[] VALID_ACTIONS = { "help", "exit", "list", "add", "delete", "mark-in-progress", "mark-done" };
+    private static readonly string[] VALID_ACTIONS = { "help", "exit", "list", "add", "delete", "mark-in-progress", "mark-done", "update" };
 
     private static readonly Dictionary<string, string> HELP_COMMANDS = new()
 {
@@ -13,6 +13,7 @@ class Program
     { "list todo", "Show pending tasks" },
     { "list in-progress", "Show tasks in progress" },
     { "add [task]", "Add a new task" },
+    { "update [task id] [description]", "Update description of a task"},
     { "delete [task id]", "Remove a task" },
     { "mark-in-progress [task id]", "Mark a task as in progress" },
     { "mark-done [task id]", "Mark a task as done" },
@@ -60,6 +61,12 @@ class Program
             case "add":
                 RunAddCommand(arguments);
                 break;
+            case "list":
+                RunListCommand(arguments);
+                return;
+            case "update":
+                RunUpdateCommand(arguments);
+                return;
             case "delete":
                 RunDeleteCommand(arguments);
                 break;
@@ -69,13 +76,37 @@ class Program
             case "mark-done":
                 RunMarkCommand(arguments, State.Done);
                 break;
-            case "list":
-                RunListCommand(arguments);
-                return;
             default:
                 Console.WriteLine($"ERROR: Unknown command '{command}'.");
                 return;
         }
+    }
+
+    private static void RunUpdateCommand(string[] arguments)
+    {
+        if (arguments.Length <= 1 || !int.TryParse(arguments[0], out int result))
+        {
+            Console.WriteLine("ERROR: Update Command needs to be in the form: update <task-id> <description>\n");
+            return;
+        }
+
+        tasks = TaskService.LoadTasks();
+
+        if (result > tasks.Count || result <= 0)
+        {
+            Console.WriteLine($"ERROR: No task with id {result}.\n");
+            return;
+        }
+
+        string[] newDescription = arguments.Skip(1).ToArray();
+
+        ToDoTask task = tasks[result - 1];
+        task.Description = string.Join(" ", newDescription);
+
+        TaskService.SaveTasks(tasks);
+
+        Console.WriteLine("Task updated successfully!\n");
+        PrintTodoList();
     }
 
     private static void RunListCommand(string[] arguments)
