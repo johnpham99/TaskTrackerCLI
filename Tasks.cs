@@ -10,6 +10,10 @@ namespace MyProject.Models
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public Status status { get; set; }
 
+        public DateTime createdAt { get; set; }
+
+        public DateTime updatedAt { get; set; }
+
         public override string ToString()
         {
             return $"{id}. {description} ({status})";

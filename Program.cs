@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using MyProject.Models;
 using MyProject.Services;
 class Program
@@ -88,7 +88,7 @@ class Program
 
     private static void RunUpdateCommand(string[] arguments)
     {
-        if (arguments.Length <= 1 || !int.TryParse(arguments[0], out int result))
+        if (arguments.Length <= 1 || !int.TryParse(arguments[0], out int id))
         {
             Console.WriteLine("ERROR: Update Command needs to be in the form: update <task-id> <description>\n");
             return;
@@ -96,16 +96,17 @@ class Program
 
         tasks = TaskService.LoadTasks();
 
-        if (result > tasks.Count || result <= 0)
+        if (id > tasks.Count || id <= 0)
         {
-            Console.WriteLine($"ERROR: No task with id {result}.\n");
+            Console.WriteLine($"ERROR: No task with id {id}.\n");
             return;
         }
 
         string[] newDescription = arguments.Skip(1).ToArray();
 
-        ToDoTask task = tasks[result - 1];
+        ToDoTask task = tasks[id - 1];
         task.description = string.Join(" ", newDescription);
+        task.updatedAt = DateTime.Now;
 
         TaskService.SaveTasks(tasks);
 
@@ -132,7 +133,7 @@ class Program
 
     private static void RunMarkCommand(string[] arguments, Status status)
     {
-        if (arguments.Length == 0 || arguments.Length > 1 || !int.TryParse(arguments[0], out int result))
+        if (arguments.Length == 0 || arguments.Length > 1 || !int.TryParse(arguments[0], out int id))
         {
             if (status == Status.InProgress)
             {
@@ -147,21 +148,28 @@ class Program
 
         tasks = TaskService.LoadTasks();
 
-        if (result > tasks.Count || result <= 0)
+        if (id > tasks.Count || id <= 0)
         {
-            Console.WriteLine($"ERROR: No task with id {result}.\n");
+            Console.WriteLine($"ERROR: No task with id {id}.\n");
             return;
         }
 
-        tasks[result - 1].status = status;
+        if (tasks[id - 1].status == status)
+        {
+            Console.WriteLine($"ERROR: Task {id} already in given state.\n");
+            return;
+        }
+
+        tasks[id - 1].status = status;
+        tasks[id - 1].updatedAt = DateTime.Now;
         TaskService.SaveTasks(tasks);
-        Console.WriteLine($"Task {result} marked successfully!\n");
+        Console.WriteLine($"Task {id} marked successfully!\n");
         PrintTodoList();
     }
 
     private static void RunDeleteCommand(string[] arguments)
     {
-        if (arguments.Length == 0 || arguments.Length > 1 || !int.TryParse(arguments[0], out int result))
+        if (arguments.Length == 0 || arguments.Length > 1 || !int.TryParse(arguments[0], out int id))
         {
             Console.WriteLine("ERROR: Delete Command needs to be in the form: delete <task-id>\n");
             return;
@@ -169,13 +177,13 @@ class Program
 
         tasks = TaskService.LoadTasks();
 
-        if (result > tasks.Count || result <= 0)
+        if (id > tasks.Count || id <= 0)
         {
-            Console.WriteLine($"ERROR: No task with id {result}.\n");
+            Console.WriteLine($"ERROR: No task with id {id}.\n");
             return;
         }
 
-        tasks.RemoveAt(result - 1);
+        tasks.RemoveAt(id - 1);
 
         for (int i = 0; i < tasks.Count; i++)
         {
@@ -196,12 +204,15 @@ class Program
         }
 
         int id = tasks.Count() == 0 ? 1 : tasks[tasks.Count() - 1].id + 1;
+        DateTime currentDateTime = DateTime.Now;
 
         ToDoTask task = new ToDoTask
         {
             id = id,
             description = string.Join(" ", arguments),
-            status = Status.Todo
+            status = Status.Todo,
+            createdAt = currentDateTime,
+            updatedAt = currentDateTime
         };
 
         tasks = TaskService.LoadTasks();
@@ -215,43 +226,58 @@ class Program
     private static void PrintTodoList(string option = "")
     {
         tasks = TaskService.LoadTasks();
-
         IEnumerable<ToDoTask> filteredTasks = tasks;
 
-        if (option == "")
-        {
-            Console.WriteLine("\n===== To Do List =====");
-        }
+        string header = "\n===== [ TO-DO LIST ] =====";
 
         if (option == "done")
         {
             filteredTasks = tasks.Where(t => t.status == Status.Done);
-            Console.WriteLine("\n===== To Do List (Done) =====");
+            header = "\n===== [ COMPLETED TASKS ] =====";
         }
         else if (option == "todo")
         {
             filteredTasks = tasks.Where(t => t.status == Status.Todo);
-            Console.WriteLine("\n===== To Do List (To Do) =====");
+            header = "\n===== [ PENDING TASKS ] =====";
         }
         else if (option == "in-progress")
         {
             filteredTasks = tasks.Where(t => t.status == Status.InProgress);
-            Console.WriteLine("\n===== To Do List (In Progress) =====");
+            header = "\n===== [ IN-PROGRESS TASKS ] =====";
         }
+
+        string todoSymbol = "[ ]";  // Task not started
+        string inProgressSymbol = "[~]"; // In-progress
+        string doneSymbol = "[✔]"; // Completed
+
+        Console.WriteLine(header);
 
         if (!filteredTasks.Any())
         {
-            Console.WriteLine("No tasks found.");
+            Console.WriteLine("No tasks found.\n");
+            return;
         }
-        else
+
+        Console.WriteLine("----------------------------------------------------------------");
+        Console.WriteLine(" ID  | Status  | Description            | Created At      | Updated At      ");
+        Console.WriteLine("----------------------------------------------------------------");
+
+        foreach (ToDoTask task in filteredTasks)
         {
-            foreach (ToDoTask task in filteredTasks)
+            string statusSymbol = task.status switch
             {
-                Console.WriteLine(task);
-            }
+                Status.Todo => todoSymbol,
+                Status.InProgress => inProgressSymbol,
+                Status.Done => doneSymbol,
+                _ => "[?]"
+            };
+
+            Console.WriteLine($"{task.id,-4} | {statusSymbol,-8} | {task.description,-20} | {task.createdAt:yyyy-MM-dd HH:mm} | {task.updatedAt:yyyy-MM-dd HH:mm}");
         }
-        Console.WriteLine("==============================\n");
+
+        Console.WriteLine("----------------------------------------------------------------\n");
     }
+
     private static void RunHelpCommand()
     {
         Console.WriteLine("\n===== Available Commands =====");
