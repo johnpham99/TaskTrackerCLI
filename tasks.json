@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "id": 1,
+    "description": "wake up",
+    "status": "Done",
+    "createdAt": "2025-02-13T21:20:11.346887-05:00",
+    "updatedAt": "2025-02-13T21:20:23.879991-05:00"
+  },
+  {
+    "id": 2,
+    "description": "code",
+    "status": "InProgress",
+    "createdAt": "2025-02-13T21:20:56.14516-05:00",
+    "updatedAt": "2025-02-13T21:21:06.316012-05:00"
+  },
+  {
+    "id": 3,
+    "description": "this is a new task",
+    "status": "Todo",
+    "createdAt": "2025-02-13T21:27:38.329872-05:00",
+    "updatedAt": "2025-02-13T21:27:38.329872-05:00"
+  }
+]

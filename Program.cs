@@ -283,7 +283,7 @@ class Program
         Console.WriteLine("\n===== Available Commands =====");
         foreach (var command in HELP_COMMANDS)
         {
-            Console.WriteLine($"{command.Key.PadRight(20)} - {command.Value}");
+            Console.WriteLine($"{command.Key.PadRight(30)} - {command.Value}");
         }
         Console.WriteLine("==============================\n");
     }
