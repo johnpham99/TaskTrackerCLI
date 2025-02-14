@@ -1,9 +1,9 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using MyProject.Models;
 using MyProject.Services;
 class Program
 {
-    private static readonly string[] VALID_ACTIONS = { "help", "exit", "list", "add", "delete", "mark-in-progress", "mark-done", "update" };
+    private static readonly string[] VALID_ACTIONS = { "help", "exit", "list", "add", "delete", "mark-in-progress", "mark-done", "update", "clear" };
 
     private static readonly Dictionary<string, string> HELP_COMMANDS = new()
 {
@@ -17,6 +17,7 @@ class Program
     { "delete [task id]", "Remove a task" },
     { "mark-in-progress [task id]", "Mark a task as in progress" },
     { "mark-done [task id]", "Mark a task as done" },
+    { "clear", "Clear the console screen"},
     { "exit", "Close the application"}
 };
 
@@ -25,7 +26,7 @@ class Program
     static void Main(string[] args)
     {
         Console.WriteLine(" --- Task Tracker Launched! --- ");
-        Console.WriteLine("'help' - print available commands");
+        Console.WriteLine("'help' - print available commands\n");
 
         while (true)
         {
@@ -52,7 +53,10 @@ class Program
                 RunHelpCommand();
                 return;
             case "exit":
-                ExitApplication();
+                RunExitCommand();
+                return;
+            case "clear":
+                RunClearCommand();
                 return;
         }
 
@@ -258,7 +262,14 @@ class Program
         Console.WriteLine("==============================\n");
     }
 
-    private static void ExitApplication()
+    private static void RunClearCommand()
+    {
+        Console.Clear();
+        Console.WriteLine(" --- Task Tracker Launched! --- ");
+        Console.WriteLine("'help' - print available commands\n");
+    }
+
+    private static void RunExitCommand()
     {
         Console.WriteLine("Exiting Task Tracker... Goodbye!");
         Environment.Exit(0);
