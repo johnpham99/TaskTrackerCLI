@@ -4,19 +4,19 @@ namespace MyProject.Models
 {
     public class ToDoTask
     {
-        public int Id { get; set; }
-        public string? Description { get; set; }
+        public int id { get; set; }
+        public string? description { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public State State { get; set; }
+        public Status status { get; set; }
 
         public override string ToString()
         {
-            return $"{Id}. {Description} ({State})";
+            return $"{id}. {description} ({status})";
         }
     }
 
-    public enum State
+    public enum Status
     {
         Todo,
         InProgress,

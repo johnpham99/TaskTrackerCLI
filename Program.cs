@@ -71,10 +71,10 @@ class Program
                 RunDeleteCommand(arguments);
                 break;
             case "mark-in-progress":
-                RunMarkCommand(arguments, State.InProgress);
+                RunMarkCommand(arguments, Status.InProgress);
                 break;
             case "mark-done":
-                RunMarkCommand(arguments, State.Done);
+                RunMarkCommand(arguments, Status.Done);
                 break;
             default:
                 Console.WriteLine($"ERROR: Unknown command '{command}'.");
@@ -101,7 +101,7 @@ class Program
         string[] newDescription = arguments.Skip(1).ToArray();
 
         ToDoTask task = tasks[result - 1];
-        task.Description = string.Join(" ", newDescription);
+        task.description = string.Join(" ", newDescription);
 
         TaskService.SaveTasks(tasks);
 
@@ -126,11 +126,11 @@ class Program
         PrintTodoList(arguments[0]);
     }
 
-    private static void RunMarkCommand(string[] arguments, State state)
+    private static void RunMarkCommand(string[] arguments, Status status)
     {
         if (arguments.Length == 0 || arguments.Length > 1 || !int.TryParse(arguments[0], out int result))
         {
-            if (state == State.InProgress)
+            if (status == Status.InProgress)
             {
                 Console.WriteLine("ERROR: Mark Command needs to be in the form: mark-in-progress <task-id>\n");
             }
@@ -149,7 +149,7 @@ class Program
             return;
         }
 
-        tasks[result - 1].State = state;
+        tasks[result - 1].status = status;
         TaskService.SaveTasks(tasks);
         Console.WriteLine($"Task {result} marked successfully!\n");
         PrintTodoList();
@@ -175,7 +175,7 @@ class Program
 
         for (int i = 0; i < tasks.Count; i++)
         {
-            tasks[i].Id = i + 1; // Reset IDs from 1, 2, ..., n
+            tasks[i].id = i + 1; // Reset IDs from 1, 2, ..., n
         }
 
         TaskService.SaveTasks(tasks);
@@ -191,13 +191,13 @@ class Program
             return;
         }
 
-        int id = tasks.Count() == 0 ? 1 : tasks[tasks.Count() - 1].Id + 1;
+        int id = tasks.Count() == 0 ? 1 : tasks[tasks.Count() - 1].id + 1;
 
         ToDoTask task = new ToDoTask
         {
-            Id = id,
-            Description = string.Join(" ", arguments),
-            State = State.Todo
+            id = id,
+            description = string.Join(" ", arguments),
+            status = Status.Todo
         };
 
         tasks = TaskService.LoadTasks();
@@ -221,17 +221,17 @@ class Program
 
         if (option == "done")
         {
-            filteredTasks = tasks.Where(t => t.State == State.Done);
+            filteredTasks = tasks.Where(t => t.status == Status.Done);
             Console.WriteLine("\n===== To Do List (Done) =====");
         }
         else if (option == "todo")
         {
-            filteredTasks = tasks.Where(t => t.State == State.Todo);
+            filteredTasks = tasks.Where(t => t.status == Status.Todo);
             Console.WriteLine("\n===== To Do List (To Do) =====");
         }
         else if (option == "in-progress")
         {
-            filteredTasks = tasks.Where(t => t.State == State.InProgress);
+            filteredTasks = tasks.Where(t => t.status == Status.InProgress);
             Console.WriteLine("\n===== To Do List (In Progress) =====");
         }
 
